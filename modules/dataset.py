@@ -89,6 +89,91 @@ class Mobydick(Dataset):
         return self.transform(self.sentences[i])
 
 
+class Bible(Dataset):
+
+    # Constructor
+    def __init__(self, file_path, min_len=4, transform=None):
+
+        # Load data
+        with open(file_path, 'r') as file:
+            text = file.read()
+
+        ## Text preprocessing
+        # Remove non-unicode characters
+        text = ud.unidecode(text)
+        # Lowarcase
+        text = text.lower()
+        # Remove single newlines
+        text = re.sub(r'(?<!\n)\n', ' ', text)
+        # Remove undesired punctuation and numbers
+        text = re.sub(r'[\*\=\/\d]', '', text)
+        # Remove undesired symbols between words
+        text = re.sub(r'(?<=\D)[-]+(?=(\D))', ' ', text)
+        # Remove double spaces
+        text = re.sub(r'[\t ]+', ' ', text)
+
+        # Split text into sentences
+        sentences = list(re.findall(r'([^\.\!\?\n]+[\.\!\?]+["]{,1}[ ]{,1})', text))
+
+        # Split sentences according to words
+        words = []
+        sentences_clean = []
+        for sentence in sentences:
+            # Split sentence into words according to punctuation
+            if sentence[0] == ':' and  sentence[1] == ':':
+                tokens = list(re.split(r'([ \n\:\;\"\,\(\)\.\!\?])', sentence))[2:]
+            else:
+                tokens = list(re.split(r'([ \n\:\;\"\,\(\)\.\!\?])', sentence))
+            # Remove useless characters
+            tokens = [w for w in tokens if re.search('[^| ]', w)]
+            # filter short sentences
+            if len(tokens) >= min_len:
+                # Substitute entire sentence with splited one
+                sentences_clean.append(tokens)
+                # Save words
+                words.extend(tokens)
+
+        # Store words
+        self.words = words
+        # Store sentences
+        self.sentences = sentences_clean
+        # Store sentences transformation pipeline
+        self.transform = transform
+
+    def __len__(self):
+        """ Length of the dataset
+
+        Return
+        (int)       Number of sentences in text
+        """
+        return len(self.sentences)
+
+    def __getitem__(self, i):
+        """ Random access sentence
+
+        Args
+        i (int)     Index of chosen sentence
+
+        Return
+        (str)       Sentence at index i
+
+        Raise
+        (IndexError)  In case index i-th sentence is not available
+        """
+        # Case index i is greater or equal than number of sequences
+        if i >= len(self.sentences):
+            # Raise key error
+            raise IndexError('Chosen index exceeds sentences indices')
+
+        # Case transform is not set
+        if self.transform is None:
+            # Just return i-th sentence
+            return self.sentences[i]
+
+        # Otherwise, transform it and return transformation result
+        return self.transform(self.sentences[i])
+
+
 def split_train_test(dataset, train_prc=0.8):
     """ Split input dataset
 
