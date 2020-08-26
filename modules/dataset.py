@@ -177,6 +177,13 @@ class WordToVector(object):
         # Return list of labels
         return labels
 
+    # Return vector of indices as its corresponding words
+    def reverse(self, sentence):
+        # Make list of words from labels
+        words = [self.decoder[i] for i in sentence if i in self.decoder.keys()]
+        # retrun list of words
+        return words
+
 
 class RandomCrop(object):
 
@@ -235,102 +242,3 @@ class ToTensor(object):
         tensor (torch.Tensor)   Float tensor retrieved by parsing input list
         """
         return torch.tensor(sentence).float()
-
-
-# Unit testing
-if __name__ == '__main__':
-
-    # Define path to project root
-    ROOT_PATH = os.path.join(os.path.dirname(__file__), '..')
-    # Define path to data folder
-    DATA_PATH = os.path.join(ROOT_PATH, 'data')
-
-    # Define semple input text, taken from War and Peace novel by Tolstoj
-    sample = """“The past always seems good,” said he, “but did not Suvórov
-himself fall into a trap Moreau set him, and from which he did not know
-how to escape?”
-“Who told you that? Who?” cried the prince. “Suvórov!” And he
-jerked away his plate, which Tíkhon briskly caught. “Suvórov!...
-Consider, Prince Andrew. Two... Frederick and Suvórov; Moreau!...
-Moreau would have been a prisoner if Suvórov had had a free hand; but
-he had the Hofs-kriegs-wurst-schnapps-Rath on his hands. It would have
-puzzled the devil himself! When you get there you’ll find out what
-those Hofs-kriegs-wurst-Raths are! Suvórov couldn’t manage them so
-what chance has Michael Kutúzov? No, my dear boy,” he continued,
-“you and your generals won’t get on against Buonaparte; you’ll
-have to call in the French, so that birds of a feather may fight
-together. The German, Pahlen, has been sent to New York in America, to
-fetch the Frenchman, Moreau,” he said, alluding to the invitation made
-that year to Moreau to enter the Russian service.... “Wonderful!...
-Were the Potëmkins, Suvórovs, and Orlóvs Germans? No, lad, either you
-fellows have all lost your wits, or I have outlived mine. May God help
-you, but we’ll see what will happen. Buonaparte has become a great
-commander among them! Hm!...”
-“I don’t at all say that all the plans are good,” said Prince
-Andrew, “I am only surprised at your opinion of Bonaparte. You
-may laugh as much as you like, but all the same Bonaparte is a great
-general!”
-“Michael Ivánovich!” cried the old prince to the architect who,
-busy with his roast meat, hoped he had been forgotten: “Didn’t
-I tell you Buonaparte was a great tactician? Here, he says the same
-thing.”
-“To be sure, your excellency,” replied the architect.
-The prince again laughed his frigid laugh."""
-
-    # Try cleaning feature
-    cleaned = WarAndPeace.clean_text(sample)
-    # Print cleaned text
-    print('Cleaned text:')
-    print(cleaned)
-    print()
-
-    # Split text into sentences
-    sentences = WarAndPeace.split_sentences(cleaned)
-    # Loop through each splitted sentence
-    for i in range(len(sentences)):
-
-        print('{:d}-th sentence:'.format(i+1))
-        print(sentences[i])
-        print()
-
-        # Split sentence into words
-        print('{:d}-th sentence words:'.format(i+1))
-        print(WarAndPeace.split_words(sentences[i]))
-        print()
-
-        # Slit sentence into characters
-        print('{:d}-th sentence chars:'.format(i+1))
-        print(WarAndPeace.split_chars(sentences[i]))
-        print()
-
-    # Load new dataset
-    war_and_peace = WarAndPeace(
-        file_path = os.path.join(DATA_PATH, 'war-and-peace-tolstoj.txt'),
-        split_how='chars',
-        transform=transforms.Compose([
-            OneHotEncode(alphabet={'a', 'b', 'c'}),
-            ToTensor()
-        ])
-    )
-
-    # Split dataset in two
-    train, test = split_train_test(war_and_peace, 0.8)
-    # Check lengths
-    print('Original dataset has size {:d}'.format(len(war_and_peace)), end=' ')
-    print('while train dataset has length {:d}'.format(len(train)), end=' ')
-    print('and test dataset has length {:d}'.format(len(test)))
-    print()
-
-    # Loop train dataset first 5 sentences
-    print('Train dataset head:')
-    for i in range(5):
-        print('{:d}-th sentence'.format(i+1))
-        print(train[i])
-        print()
-
-    # Loop test dataset first 5 sentences
-    print('Test dataset head:')
-    for i in range(5):
-        print('{:d}-th sentence'.format(i+1))
-        print(test[i])
-        print()
