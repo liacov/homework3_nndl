@@ -239,7 +239,7 @@ class OneHotEncode(object):
         return encoded
 
 
-class WordToVector(object):
+class WordToIndex(object):
 
     # Constructor
     def __init__(self, words):
