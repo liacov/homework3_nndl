@@ -160,33 +160,6 @@ def split_train_test(dataset, train_prc=0.8):
     return torch.utils.data.random_split(dataset, [m, n - m])
 
 
-class OneHotEncode(object):
-
-    # Constructor
-    def __init__(self, alphabet):
-
-        # Store the alphabet itself
-        self.alphabet = set(alphabet)
-        # Define mapping from words to integers
-        self.encoder = {e: i for i, e in enumerate(alphabet)}
-        # Define mapping from integers to words
-        self.decoder = {i: e for i, e in enumerate(alphabet)}
-
-    def __call__(self, sentence):
-
-        # Map words/chars to integers
-        encoded = [self.encoder[e] for e in sentence if e in self.alphabet]
-        # For each word/char in sentence, map it to vector
-        encoded = [
-            # Make a vector: set 1 only wher index is equal to word/char number
-            [int(encoded[i] == j) for j in range(len(self.alphabet))]
-            # Loop through each word/char in sentence
-            for i in range(len(encoded))
-        ]
-        # Return one hot encoded sentence
-        return encoded
-
-
 class WordToIndex(object):
 
     # Constructor
@@ -244,5 +217,5 @@ class RandomCrop(object):
 class ToTensor(object):
 
     def __call__(self, sentence):
-        
+
         return torch.tensor(sentence).float()
