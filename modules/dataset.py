@@ -27,7 +27,7 @@ class Mobydick(Dataset):
         text = re.sub(r'[\*\=\/\d]', '', text)
         # Remove underscores
         text = re.sub('_', '', text)
-        # Remove undesired symbols between words
+        # Remove symbols between words
         text = re.sub(r'(?<=\D)[-]+(?=(\D))', ' ', text)
         # Remove double spaces
         text = re.sub(r'[\t ]+', ' ', text)
