@@ -23,7 +23,7 @@ class Mobydick(Dataset):
         text = text.lower()
         # Remove single newlines
         text = re.sub(r'(?<!\n)\n', ' ', text)
-        # Remove undesired punctuation and numbers
+        # Remove punctuation and numbers
         text = re.sub(r'[\*\=\/\d]', '', text)
         # Remove underscores
         text = re.sub('_', '', text)
