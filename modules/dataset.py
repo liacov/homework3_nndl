@@ -25,6 +25,8 @@ class Mobydick(Dataset):
         text = re.sub(r'(?<!\n)\n', ' ', text)
         # Remove undesired punctuation and numbers
         text = re.sub(r'[\*\=\/\d]', '', text)
+        # Remove underscores
+        text = re.sub('_', '', text)
         # Remove undesired symbols between words
         text = re.sub(r'(?<=\D)[-]+(?=(\D))', ' ', text)
         # Remove double spaces
@@ -49,32 +51,18 @@ class Mobydick(Dataset):
                 words.extend(tokens)
 
         # Store words
-        self.words = words
+        self.words = set(words)
         # Store sentences
         self.sentences = sentences_clean
         # Store sentences transformation pipeline
         self.transform = transform
 
     def __len__(self):
-        """ Length of the dataset
 
-        Return
-        (int)       Number of sentences in text
-        """
         return len(self.sentences)
 
     def __getitem__(self, i):
-        """ Random access sentence
 
-        Args
-        i (int)     Index of chosen sentence
-
-        Return
-        (str)       Sentence at index i
-
-        Raise
-        (IndexError)  In case index i-th sentence is not available
-        """
         # Case index i is greater or equal than number of sequences
         if i >= len(self.sentences):
             # Raise key error
@@ -101,7 +89,7 @@ class Bible(Dataset):
         ## Text preprocessing
         # Remove non-unicode characters
         text = ud.unidecode(text)
-        # Lowarcase
+        # Lowercase
         text = text.lower()
         # Remove single newlines
         text = re.sub(r'(?<!\n)\n', ' ', text)
@@ -120,13 +108,15 @@ class Bible(Dataset):
         sentences_clean = []
         for sentence in sentences:
             # Split sentence into words according to punctuation
-            if sentence[0] == ':' and  sentence[1] == ':':
-                tokens = list(re.split(r'([ \n\:\;\"\,\(\)\.\!\?])', sentence))[2:]
-            else:
-                tokens = list(re.split(r'([ \n\:\;\"\,\(\)\.\!\?])', sentence))
+            tokens = list(re.split(r'([ \n\:\;\"\,\(\)\.\!\?])', sentence))
             # Remove useless characters
             tokens = [w for w in tokens if re.search('[^| ]', w)]
-            # filter short sentences
+            # Remove punctuation at the beginning of sentences
+            if tokens[0] == ':' and  tokens[1] == ':':
+                tokens = tokens[2:]
+            elif tokens[0] == ':' and  tokens[1]!= ':':
+                tokens = tokens[1:]
+            # Filter short sentences
             if len(tokens) >= min_len:
                 # Substitute entire sentence with splited one
                 sentences_clean.append(tokens)
@@ -134,32 +124,18 @@ class Bible(Dataset):
                 words.extend(tokens)
 
         # Store words
-        self.words = words
+        self.words = set(words)
         # Store sentences
         self.sentences = sentences_clean
         # Store sentences transformation pipeline
         self.transform = transform
 
     def __len__(self):
-        """ Length of the dataset
 
-        Return
-        (int)       Number of sentences in text
-        """
         return len(self.sentences)
 
     def __getitem__(self, i):
-        """ Random access sentence
 
-        Args
-        i (int)     Index of chosen sentence
-
-        Return
-        (str)       Sentence at index i
-
-        Raise
-        (IndexError)  In case index i-th sentence is not available
-        """
         # Case index i is greater or equal than number of sequences
         if i >= len(self.sentences):
             # Raise key error
@@ -175,20 +151,7 @@ class Bible(Dataset):
 
 
 def split_train_test(dataset, train_prc=0.8):
-    """ Split input dataset
 
-    Split input in two: one for train and one for test, with sentences being
-    put in one or in the other according to defined proportion,
-
-    Args
-    dataset (Dataset)       The whole dataset which must be split
-    train_prc (float)       Percentage of sentences to be assigned to
-                            training dataset
-
-    Return
-    (Dataset)       Train dataset
-    (Dataset)       Test dataset
-    """
     # Define dataset length
     n = len(dataset)
     # Define number of training dataset indices
@@ -201,14 +164,7 @@ class OneHotEncode(object):
 
     # Constructor
     def __init__(self, alphabet):
-        """ Constructor
 
-        Save the given alphabet and mappings for turning word/character to
-        integers and vice versa.
-
-        Args
-        alphabet (iterable)     Set of words/characters to encode
-        """
         # Store the alphabet itself
         self.alphabet = set(alphabet)
         # Define mapping from words to integers
@@ -217,15 +173,7 @@ class OneHotEncode(object):
         self.decoder = {i: e for i, e in enumerate(alphabet)}
 
     def __call__(self, sentence):
-        """ One hot encoder
 
-        Args
-        sentence (list)     Sentence as list of words/chars
-
-        Return
-        (list)              List where every word/char has been mapped to an
-                            integer
-        """
         # Map words/chars to integers
         encoded = [self.encoder[e] for e in sentence if e in self.alphabet]
         # For each word/char in sentence, map it to vector
@@ -243,11 +191,7 @@ class WordToIndex(object):
 
     # Constructor
     def __init__(self, words):
-        """ Constructor
 
-        Args
-        words (iterable)        Set of words/characters to encode
-        """
         # Store list of words
         self.words = set(words)
         # Define mapping from words to integers
@@ -278,23 +222,7 @@ class RandomCrop(object):
         self.crop_len = crop_len
 
     def __call__(self, sentence):
-        """ Crop sentence to given length
 
-        Given an input sentence (a list of words/chars), define its total
-        length and take a smaller window at random, according to previously set
-        crop length.
-
-        Args
-        sentence (list)     List of entities in sentence, such as words/chars
-
-        Return
-        (list)              A subset of input sentence consisiting in a window
-                            whose length is smaller or equal than input
-                            sentence length
-
-        Raise
-        (IndexError)        In case crop length is higher than sentence length
-        """
         # Check for compatibility of crop length with sentence length
         if len(sentence) < self.crop_len:
             # Raise new index error
@@ -316,14 +244,5 @@ class RandomCrop(object):
 class ToTensor(object):
 
     def __call__(self, sentence):
-        """ Turn list to tensor
-
-        Args
-        sentence (list)         List of lists (e.g. one-hot encoded sentence is
-                                a list of binary vectors representing
-                                words/chars).
-
-        Return
-        tensor (torch.Tensor)   Float tensor retrieved by parsing input list
-        """
+        
         return torch.tensor(sentence).float()

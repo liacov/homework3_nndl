@@ -16,31 +16,6 @@ class Network(nn.Module):
         hidden_type='LSTM', trained_embeddings=None, freeze_embeddings=False,
         dropout_prob=0.3
     ):
-        """ Constructor
-
-        Args
-        vocab_size (int)                    Number of words in vocabulary
-        embedding_dim (int)                 Number of attributes in each
-                                            word vector
-        input_size (int)                    Number of features in a single
-                                            input vector
-        hidden_units (int)                  Number of hidden units in a single
-                                            recurrent hidden layer
-        layers_num (int)                    Number of stacked hidden layers
-        hidden_type (str)                   Type of hidden layer: LST or GRU
-        trained_embeddings (torch.Float)    Pre-trained embeddings tensor
-        freeze_embeddings (bool)            Wether embeddings have to be
-                                            trained or not
-        dropout_prob (float)                Probability for dropout, must be
-                                            between [0, 1]
-
-        Raise
-        (ValueError)                        In case hidden type is not LSTM
-                                            or GRU
-        (ValueError)                        In case given embedding shape and
-                                            pretrained embeddings does not
-                                            coincide
-        """
         # Call parent constructor
         super().__init__()
 
@@ -101,14 +76,7 @@ class Network(nn.Module):
 
     # Retrieve hidden layer class
     def get_recurrent(self, hidden_type):
-        """ Retrieve hidden layer class
-        Args
-        hidden_type (str)       Name of hidden layer class
-        Return
-        (nn.Module)             Recurrent layer class
-        Raise
-        (ValueError)            In case hidden type is not valid
-        """
+
         # Case hidden type is LSTM
         if hidden_type == 'LSTM':
             return nn.LSTM
@@ -117,25 +85,9 @@ class Network(nn.Module):
         if hidden_type == 'GRU':
             return nn.GRU
 
-        # Otherwise: raise error
-        raise ValueError(' '.join([
-            'Error: given recurrent neural network type can be',
-            'either LSTM or GRU: {} given instead'.format(hidden_type)
-        ]))
 
     def forward(self, x, state=None):
-        """ Make forward step
 
-        Args
-        x (torch.Tensor)        Tensor containing input vectors with size
-                                (batch size, window size, number of features)
-
-        state (?)               TODO
-
-        Return
-        (torch.Tensor)          Predicted new values (shifted input vector)
-        (?)                     TODO
-        """
         # Go through embedding layer first
         x = self.embed(x)
         # Recurrent (hidden) layer output
@@ -146,16 +98,7 @@ class Network(nn.Module):
         return x, state
 
     def train_batch(self, batch, loss_fn, optimizer):
-        """ Train batch of input data
 
-        Args
-        batch (torch.Tensor)        Float tensor representing input data
-        loss_fn (nn.Module)         Loss function, used to compute train loss
-        optimizer (nn.optimizer)    Optimizer used to find out best weights
-
-        Return
-        (float)                     Mean loss
-        """
         # Take out target variable (last word of the sentence)
         target = batch[:, -1]
         # Remove the target variable from the input tensor
@@ -176,15 +119,7 @@ class Network(nn.Module):
         return float(loss.data)
 
     def test_batch(self, batch, loss_fn):
-        """ Test batch of input data
 
-        Args
-        batch (torch.Tensor)        Float tensor representing input data
-        loss_fn (nn.Module)         Loss function, used to compute train loss
-
-        Return
-        (float)                     Mean loss
-        """
         # Take out target variable (last character) from characters window
         target = batch[:, -1]
         # Remove the target variable from the input tensor
