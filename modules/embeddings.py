@@ -1,7 +1,6 @@
 import re
 import numpy as np
 
-
 def from_file(path, words=None):
 
     # Intitialize words embeddings (word: vector)
