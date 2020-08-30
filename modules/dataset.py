@@ -2,6 +2,7 @@ import os
 import re
 import torch
 import random
+import numpy as np
 import unidecode as ud
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
@@ -159,12 +160,41 @@ def split_train_test(dataset, train_prc=0.8):
     # Split datasets in two
     return torch.utils.data.random_split(dataset, [m, n - m])
 
+class OneHotEncode(object):
+
+    def __init__(self, words):
+        # Store list of words
+        self.words = set(words)
+        # Define mapping from words to integers
+        self.encoder = {e: i for i, e in enumerate(words)}
+        # Define mapping from integers to words
+        self.decoder = {i: e for i, e in enumerate(words)}
+
+    def __call__(self, sentence):
+        # For each word in sentence, map it to vector
+        encoded = [
+            # Make a vector: set 1 only where index is equal to word number, 0 otherwise
+            [ int(i == word_index) for i in range(len(self.words)) ]
+        # Loop on word indices
+        for word_index in sentence
+        ]
+        # Return one hot encoded sentence
+        return encoded
+
+    def decode(self, sentence):
+        """
+        Input: list of binary lists (one hot encodings)
+        Output: list of words (strings)
+        """
+        # Map each inner list into a word text
+        words = [ self.decoder[np.argmax(ohe)] for ohe in sentence ]
+        return words
+
+
 
 class WordToIndex(object):
 
-    # Constructor
     def __init__(self, words):
-
         # Store list of words
         self.words = set(words)
         # Define mapping from words to integers
@@ -180,7 +210,7 @@ class WordToIndex(object):
         return labels
 
     # Return vector of indices as its corresponding words
-    def reverse(self, sentence):
+    def decode(self, sentence):
         # Make list of words from labels
         words = [self.decoder[i] for i in sentence if i in self.decoder.keys()]
         # retrun list of words

@@ -1,11 +1,12 @@
-from time import time
-from torch import nn
-import numpy as np
-import itertools
-import torch
-import json
-import re
 import os
+import re
+import json
+import torch
+import itertools
+import numpy as np
+from torch import nn
+from time import time
+from modules.dataset import OneHotEncode
 
 
 class Network(nn.Module):
@@ -37,7 +38,8 @@ class Network(nn.Module):
         )
 
         # Define output layer
-        self.out = nn.Linear(hidden_units, embedding_dim)
+        self.out = nn.Linear(hidden_units, vocab_size)
+        # self.act = nn.LogSoftmax(dim=0)
 
         # Save architecture
         self.input_size = embedding_dim
@@ -94,23 +96,22 @@ class Network(nn.Module):
         x, state = self.rnn(x, state)
         # Decision (linear) layer output
         x = self.out(x)
+        # Apply LogSoftmax
+        # x = self.act(x)
         # Return both new x and state
         return x, state
 
     def train_batch(self, batch, loss_fn, optimizer):
 
-        # Take out target variable (last word of the sentence)
+        # Extract target and input
         target = batch[:, -1]
-        # Remove the target variable from the input tensor
         input = batch[:, :-1]
-
         # Eventually clear previous recorded gradients
         optimizer.zero_grad()
         # Make forward pass
         output, _ = self(input)
-
         # Evaluate loss only for last output
-        loss = loss_fn(output[:, -1, :], self.embed(target))
+        loss = loss_fn(output[:, -1, :], target)
         # Backward pass
         loss.backward()
         # Update
@@ -120,13 +121,12 @@ class Network(nn.Module):
 
     def test_batch(self, batch, loss_fn):
 
-        # Take out target variable (last character) from characters window
+        # Extract target and input
         target = batch[:, -1]
-        # Remove the target variable from the input tensor
         input = batch[:, :-1]
         # Make forward pass
         output, _ = self(input)
         # Evaluate loss only for last output
-        loss = loss_fn(output[:, -1, :], self.embed(target))
+        loss = loss_fn(output[:, -1, :], target)
         # Return average batch loss
         return float(loss.data)
