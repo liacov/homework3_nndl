@@ -1,16 +1,14 @@
-import os
 import re
 import torch
 import random
 import numpy as np
 import unidecode as ud
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 
 class Mobydick(Dataset):
 
-    # Constructor
     def __init__(self, file_path, min_len=4, transform=None):
 
         # Load data
@@ -80,7 +78,6 @@ class Mobydick(Dataset):
 
 class Bible(Dataset):
 
-    # Constructor
     def __init__(self, file_path, min_len=4, transform=None):
 
         # Load data
